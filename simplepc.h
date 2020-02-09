@@ -11,12 +11,12 @@ using namespace std;
 
 int sc_memoryInit();
 int sc_memorySet(int, int);
-int sc_memoryGet(int, int*);
+int sc_memoryGet(int, int&);
 int sc_memorySave(string);
 int sc_memoryLoad(string);
 int sc_regInit();
 int sc_regSet(int, int);
-int sc_regGet(int, int*);
-int sc_commandEncode(int, int, int*);
-int sc_commandDecode(int, int*, int*);
+int sc_regGet(int, int&);
+int sc_commandEncode(int, int, int&);
+int sc_commandDecode(int, int&, int&);
 #endif

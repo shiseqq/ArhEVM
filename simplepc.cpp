@@ -13,9 +13,9 @@ int sc_memoryInit()
 
 int sc_memorySet(int address, int value)
 {
-    if (address < 0 || address >= 101) {
+    if (address < 0 || address >= 100) {
         cout << "Error! Invalid address number\n";
-        sc_regSet(2, 1);
+        sc_regSet(M, 1);
         return 1;
     } else {
         a[address] = value;
@@ -23,13 +23,14 @@ int sc_memorySet(int address, int value)
     }
 }
 
-int sc_memoryGet(int address, int* value)
+int sc_memoryGet(int address, int& value)
 {
-    if (address < 0 || address >= 101) {
+    if (address < 0 || address >= 100) {
         cout << "Error! Invalid address number:" << address << endl;
+        sc_regSet(M, 1);
         return 1;
     } else {
-        *value = a[address];
+        value = a[address];
         return 0;
     }
 }
@@ -61,7 +62,7 @@ int sc_regInit()
 
 int sc_regSet(int regist, int value)
 {
-    if (regist > 4 || regist < 0) {
+    if (regist > 4 || regist <= 0) {
         cout << "Error! Invalid register number\n";
         return 1;
     }
@@ -77,25 +78,40 @@ int sc_regSet(int regist, int value)
     return 0;
 }
 
-int sc_regGet(int regist, int* value)
+int sc_regGet(int regist, int& value)
 {
-    if ((regist > 4) || (regist < 0)) {
+    if ((regist > 4) || (regist <= 0)) {
         cout << "Error! Invalid register number\n";
         return 1;
     }
-    *value = (reg >> (regist - 1)) & 0x1;
+    value = ((reg >> (regist - 1)) & 0x1);
     return 0;
 }
 
-int sc_commandEncode(int command, int operand, int* value)
+int sc_commandEncode(int command, int operand, int& value)
 {
-    *value = command * 128 + operand;
-    return 0;
+    if ((command == 10 || command == 11 || command == 20 || command == 21 || command > 29 && command < 34 || command > 39 && command < 44 || command > 50 && command < 77) && (operand == 10 || operand == 11 || operand == 20 || operand == 21 || operand > 29 && operand < 34 || operand > 39 && operand < 44 || operand > 50 && operand < 77)) {
+        value = command * 128 + operand;
+        return 0;
+    }
+    else {
+        cout << "Error! Invalid command or operand number" << endl;
+        return 1;
+    }
 }
 
-int sc_commandDecode(int value, int* command, int* operand)
+int sc_commandDecode(int value, int& command, int& operand)
 {
-    *command = value / 128;
-    *operand = value % 128;
-    return 0;
+    int c = value / 128;
+    int o = value % 128;
+    if ((c == 10 || c == 11 || c == 20 || c == 21 || c > 29 && c < 34 || c > 39 && c < 44 || c > 50 && c < 77) && (o == 10 || o == 11 || o == 20 || o == 21 || o > 29 && o < 34 || o > 39 && o < 44 || o > 50 && o < 77)) {
+        command = c;
+        operand = o;
+        return 0;
+    }
+    else {
+        cout << "Error! Decoding is not possible" << endl;
+        sc_regSet(E, 1);
+        return 1;
+    }
 }
