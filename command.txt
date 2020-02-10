@@ -1,0 +1,1 @@
+ g++ -c main.cpp && g++ main.o -L. -l spc -o sc

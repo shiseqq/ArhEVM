@@ -91,7 +91,7 @@ int sc_regGet(int regist, int& value)
 int sc_commandEncode(int command, int operand, int& value)
 {
     if ((command == 0x10 || command == 0x11 || command == 0x20 || command == 0x21 || command > 0x29 && command < 0x34 || command > 0x39 && command < 0x44 || command > 0x50 && command < 0x77) && (operand == 0x10 || operand == 0x11 || operand == 0x20 || operand == 0x21 || operand > 0x29 && operand < 0x34 || operand > 0x39 && operand < 0x44 || operand > 0x50 && operand < 0x77)) {
-        value = command * 128 + operand;
+        value = command * 128 + operand; // (command << 7) + operand
         return 0;
     }
     else {
@@ -102,8 +102,8 @@ int sc_commandEncode(int command, int operand, int& value)
 
 int sc_commandDecode(int value, int& command, int& operand)
 {
-    int c = value / 128;
-    int o = value % 128;
+    int c = value / 128; // value >> 7
+    int o = value % 128; // (~(c << 7)) & value
     if (!(value & (1 << 15)) && (c == 0x10 || c == 0x11 || c == 0x20 || c == 0x21 || c > 0x29 && c < 0x34 || c > 0x39 && c < 0x44 || c > 0x50 && c < 0x77) && (o == 0x10 || o == 0x11 || o == 0x20 || o == 0x21 || o > 0x29 && o < 0x34 || o > 0x39 && o < 0x44 || o > 0x50 && o < 0x77)) {
         command = c;
         operand = o;
