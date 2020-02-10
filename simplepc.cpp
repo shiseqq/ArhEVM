@@ -104,7 +104,7 @@ int sc_commandDecode(int value, int& command, int& operand)
 {
     int c = value / 128;
     int o = value % 128;
-    if ((c == 10 || c == 11 || c == 20 || c == 21 || c > 29 && c < 34 || c > 39 && c < 44 || c > 50 && c < 77) && (o == 10 || o == 11 || o == 20 || o == 21 || o > 29 && o < 34 || o > 39 && o < 44 || o > 50 && o < 77)) {
+    if (!(value & (1 << 15)) && (c == 10 || c == 11 || c == 20 || c == 21 || c > 29 && c < 34 || c > 39 && c < 44 || c > 50 && c < 77) && (o == 10 || o == 11 || o == 20 || o == 21 || o > 29 && o < 34 || o > 39 && o < 44 || o > 50 && o < 77)) {
         command = c;
         operand = o;
         return 0;
