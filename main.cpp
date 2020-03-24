@@ -113,9 +113,7 @@ int32_t main()
 
     // bc_bigcharwrite("out.bin", a, 2);
 
-    // bc_bigcharread("out.bin", b, 2, t);
-
-    
+    // bc_bigcharread("out.bin", b, 1, t);
 
     return 0;
 }

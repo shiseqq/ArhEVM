@@ -138,14 +138,11 @@ int bc_bigcharread (string file, unsigned int** &big, int count, int& read_count
 
     for (int i = 0; i < count; i++) {
         inp.read((char*)&big[i], sizeof(big[i]));
-        read_count += sizeof(big[i]);
-    }
-
-    for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 2; j++) {
-            cout << big[i][j] << " ";
+        if (inp.eof()) {
+            read_count = 0;
+            return -1;
         }
-        cout << endl;
+        read_count += sizeof(big[i]);
     }
 
     inp.close();
