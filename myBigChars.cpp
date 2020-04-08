@@ -120,7 +120,8 @@ int bc_bigcharwrite (string file, unsigned int** &big, int count) {
     ofstream out(file, ios::binary);
 
     for (int i = 0; i < count; i++) {
-        out.write((char*)&big[i], sizeof(big[i]));
+        out.write((char*)&big[i][0], sizeof(big[i][0]));
+        out.write((char*)&big[i][1], sizeof(big[i][1]));
     }
 
     out.close();
@@ -137,12 +138,14 @@ int bc_bigcharread (string file, unsigned int** &big, int count, int& read_count
     }
 
     for (int i = 0; i < count; i++) {
-        inp.read((char*)&big[i], sizeof(big[i]));
+        inp.read((char*)&big[i][0], sizeof(big[i][0]));
+        inp.read((char*)&big[i][1], sizeof(big[i][1]));
         if (inp.eof()) {
             read_count = 0;
             return -1;
         }
-        read_count += sizeof(big[i]);
+        read_count += sizeof(big[i][0]);
+        read_count += sizeof(big[i][1]);
     }
 
     inp.close();
