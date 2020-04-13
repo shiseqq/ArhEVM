@@ -312,6 +312,24 @@ int32_t main()
                     cout << "Enter file name: ";
                     cin >> s;
 
+                    if (s.size() < 5 || s.find('.') == string::npos) {
+                        cout << "Error! Invalid file name. Press any key to continue.";
+
+                        cin.get();
+                        cin.get();
+
+                        break;
+                    }
+
+                    if (s.substr(s.size() - 4, s.size()) != ".bin") {
+                        cout << "Error! Invalid file format. Supported only .bin format. Press any key to continue.";
+
+                        cin.get();
+                        cin.get();
+
+                        break; 
+                    }
+
                     sc_memorySave(s);
 
                     break;
@@ -323,6 +341,24 @@ int32_t main()
 
                     cout << "Enter file name: ";
                     cin >> s;
+
+                    if (s.size() < 5 || s.find('.') == string::npos) {
+                        cout << "Error! Invalid file name. Press any key to continue.";
+
+                        cin.get();
+                        cin.get();
+
+                        break;
+                    }
+
+                    if (s.substr(s.size() - 4, s.size()) != ".bin") {
+                        cout << "Error! Invalid file format. Supported only .bin format. Press any key to continue.";
+
+                        cin.get();
+                        cin.get();
+
+                        break; 
+                    }
 
                     if (sc_memoryLoad(s) == -1) {
                         cout << "Error! File with name" << s << "does not exist. Press any key to continue.";
