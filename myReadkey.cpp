@@ -39,6 +39,9 @@ sigint) {
             tty.c_cc[VTIME] = 1;
         }
     }
+    else {
+        tty.c_lflag &= ECHO;
+    }
 
 
     tcsetattr(0, TCSAFLUSH, &tty);
