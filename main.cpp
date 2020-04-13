@@ -288,8 +288,6 @@ int32_t main()
                     break;
                 }
                 case keys::c: {
-                    bool f = 0;
-                    
                     mt_clrscr();
                     int c, p, value;
                     cout << "Enter command and operand: ";
