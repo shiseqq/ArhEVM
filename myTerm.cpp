@@ -1,11 +1,13 @@
 #include "myTerm.h"
 
-int mt_clrscr () {
+int mt_clrscr()
+{
     printf("\E[H\E[J");
     return 0;
 }
 
-int mt_gotoXY (int x, int y) {
+int mt_gotoXY(int x, int y)
+{
     if (x >= 0 && y >= 0) {
         printf("\E[%d;%dH", y, x);
         return 0;
@@ -13,7 +15,8 @@ int mt_gotoXY (int x, int y) {
     return -1;
 }
 
-int mt_getscreensize (int& cols, int& rows) {
+int mt_getscreensize(int& cols, int& rows)
+{
     winsize size;
     ioctl(STDOUT_FILENO, TIOCGWINSZ, &size);
     cols = size.ws_col;
@@ -21,7 +24,8 @@ int mt_getscreensize (int& cols, int& rows) {
     return 0;
 }
 
-int mt_setfgcolor (colors color) {
+int mt_setfgcolor(colors color)
+{
     if (color >= 0 && color <= 7) {
         printf("\E[3%dm", color);
         return 0;
@@ -29,7 +33,8 @@ int mt_setfgcolor (colors color) {
     return -1;
 }
 
-int mt_setbgcolor (colors color) {
+int mt_setbgcolor(colors color)
+{
     if (color >= 0 && color <= 7) {
         printf("\E[4%dm", color);
         return 0;

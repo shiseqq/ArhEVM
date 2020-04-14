@@ -2,32 +2,32 @@
 
 struct termios savetty, tty;
 
-int rk_mytermsave() {
+int rk_mytermsave()
+{
     tcgetattr(0, &savetty);
 
-    return 0; 
+    return 0;
 }
 
-int rk_mytermrestore() {
+int rk_mytermrestore()
+{
     tcsetattr(0, TCSAFLUSH, &savetty);
 
     return 0;
 }
 
-int rk_mytermregime(bool regime, bool vtime, bool vmin, bool echo, bool
-sigint) {
-
+int rk_mytermregime(bool regime, bool vtime, bool vmin, bool echo, bool sigint)
+{
     tcgetattr(0, &tty);
     if (!echo) {
         tty.c_lflag &= ~(ECHO);
         if (!sigint) {
             tty.c_lflag &= ~(ISIG);
         }
-        
+
         if (!regime) {
             tty.c_lflag &= ~(ICANON);
-        }
-        else {
+        } else {
             tty.c_lflag &= ICANON;
         }
 
@@ -38,18 +38,17 @@ sigint) {
         if (vtime) {
             tty.c_cc[VTIME] = 1;
         }
-    }
-    else {
+    } else {
         tty.c_lflag &= ECHO;
     }
-
 
     tcsetattr(0, TCSAFLUSH, &tty);
 
     return 0;
 }
 
-int rk_readkey (keys &k) {
+int rk_readkey(keys& k)
+{
     int ans = 0;
 
     rk_mytermsave();
@@ -87,8 +86,7 @@ int rk_readkey (keys &k) {
         else {
             ans = -1;
         }
-    }
-    else {
+    } else {
         map<char, keys> mp;
 
         mp['l'] = keys::l;
@@ -102,8 +100,7 @@ int rk_readkey (keys &k) {
 
         if (mp.count(c)) {
             k = mp[c];
-        }
-        else {
+        } else {
             ans = -1;
         }
     }

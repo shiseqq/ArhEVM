@@ -1,27 +1,30 @@
 #include "myBigChars.h"
 
-int bc_printA(string str) {
+int bc_printA(string str)
+{
     printf("\E(0");
     cout << str;
     printf("\E(B");
     return 0;
 }
 
-int bc_printA(char c) {
+int bc_printA(char c)
+{
     printf("\E(0");
     cout << c;
     printf("\E(B");
     return 0;
 }
 
-int bc_box (int x1, int y1, int width, int height) {
+int bc_box(int x1, int y1, int width, int height)
+{
     int col, row;
     mt_getscreensize(col, row);
 
-    if (x1 < 1 || y1 < 1 || x1 + width > col || y1 + height > row || width < 2 || height < 2) {
+    if (x1 < 1 || y1 < 1 || x1 + width > col || y1 + height > row || width < 2
+        || height < 2) {
         return -1;
     }
-    
 
     mt_gotoXY(x1, y1);
     bc_printA('l');
@@ -50,7 +53,8 @@ int bc_box (int x1, int y1, int width, int height) {
     return 0;
 }
 
-int bc_printbigchar (unsigned int a[2], int x, int y, colors cl, colors bg) {
+int bc_printbigchar(unsigned int a[2], int x, int y, colors cl, colors bg)
+{
     int col, row;
     mt_getscreensize(col, row);
 
@@ -60,15 +64,14 @@ int bc_printbigchar (unsigned int a[2], int x, int y, colors cl, colors bg) {
 
     mt_setfgcolor(cl);
     mt_setbgcolor(bg);
-    for (int i = 0 ; i < 2; i++) {
+    for (int i = 0; i < 2; i++) {
         int t = 1;
-        for (int j = 0; j < 4; j++){
+        for (int j = 0; j < 4; j++) {
             for (int k = 0; k < 8; k++) {
                 mt_gotoXY(x + k, y + j);
                 if (a[i] & t) {
                     bc_printA('a');
-                }
-                else {
+                } else {
                     mt_setbgcolor(bg);
                     cout << ' ';
                 }
@@ -81,7 +84,8 @@ int bc_printbigchar (unsigned int a[2], int x, int y, colors cl, colors bg) {
     return 0;
 }
 
-int bc_setbigcharpos (unsigned int* big, int x, int y, int value) {
+int bc_setbigcharpos(unsigned int* big, int x, int y, int value)
+{
     if (x < 0 || y < 0 || x > 8 || y > 8 || (value != 1 && value != 0)) {
         return -1;
     }
@@ -90,14 +94,13 @@ int bc_setbigcharpos (unsigned int* big, int x, int y, int value) {
 
     if (value) {
         big[i] |= 1 << ((x % 4) * 8 + y);
-    }
-    else {
+    } else {
         big[i] &= ~(1 << ((x % 4) * 8 + y));
     }
-    
 }
 
-int bc_getbigcharpos(unsigned int* big, int x, int y, int& value) {
+int bc_getbigcharpos(unsigned int* big, int x, int y, int& value)
+{
     if (x < 0 || y < 0 || x > 8 || y > 8) {
         return -1;
     }
@@ -112,7 +115,8 @@ int bc_getbigcharpos(unsigned int* big, int x, int y, int& value) {
     return 0;
 }
 
-int bc_bigcharwrite (string file, unsigned int** &big, int count) {
+int bc_bigcharwrite(string file, unsigned int**& big, int count)
+{
     if (count < 1) {
         return -1;
     }
@@ -129,7 +133,8 @@ int bc_bigcharwrite (string file, unsigned int** &big, int count) {
     return 0;
 }
 
-int bc_bigcharread (string file, unsigned int** &big, int count, int& read_count) {
+int bc_bigcharread(string file, unsigned int**& big, int count, int& read_count)
+{
     ifstream inp(file, ios::binary);
     read_count = 0;
 
