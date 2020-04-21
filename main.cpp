@@ -118,12 +118,36 @@ void draw()
     mt_gotoXY((x + x * 0.75) / 2 - 4, 7);
     cout << "Operarion";
     mt_gotoXY((x + x * 0.75) / 2 - 4, 8);
-    cout << "+00 : 00";
+
+    int vl, cm, op;
+    stringstream ss;
+    string c, p;
+    sc_memoryGet(10 * kurx + kury, vl);
+    sc_commandDecode(vl, cm, op);
+
+    ss << hex << cm;
+    ss >> c;
+    ss.clear();
+
+    ss << hex << op;
+    ss >> p;
+
+    if (c.size() == 1) {
+        c += '0';
+        reverse(c.begin(), c.end());
+    }
+
+    if (p.size() == 1) {
+        p += '0';
+        reverse(p.begin(), p.end());
+    }
+
+    cout << '+' << c << " : " << p;
+
     bc_box((x + x * 0.75) / 2 - 9, 10, 20, 3);
     mt_gotoXY((x + x * 0.75) / 2 - 3, 10);
     cout << "Flags";
     mt_gotoXY((x + x * 0.75) / 2 - 5, 11);
-    // cout << "O E V M";
     int val;
     sc_regGet(P, val);
     if (val) {
@@ -206,29 +230,6 @@ void draw()
     bc_box(1, 13, (x * 0.6) - 4, 12);
     bc_printbigchar(num[10], 2, 15, colors::white, colors::black);
 
-    int vl, cm, op;
-    stringstream ss;
-    string c, p;
-    sc_memoryGet(10 * kurx + kury, vl);
-    sc_commandDecode(vl, cm, op);
-
-    ss << hex << cm;
-    ss >> c;
-    ss.clear();
-
-    ss << hex << op;
-    ss >> p;
-
-    if (c.size() == 1) {
-        c += '0';
-        reverse(c.begin(), c.end());
-    }
-
-    if (p.size() == 1) {
-        p += '0';
-        reverse(p.begin(), p.end());
-    }
-
     for (int i = 0, x = 11; i < 2; i++, x += 9) {
         bc_printbigchar(num[c[i] - '0'], x, 15, colors::white, colors::black);
     }
@@ -258,28 +259,21 @@ void sing(int sn)
             }
         }
     } else {
+        kurx = kury = 0;
+        sc_regInit();
+        sc_memoryInit();
         insc = 0;
     }
 }
 
 int32_t main()
 {
-    bool q = 0;
+    bool q = 0, timer = 0;
 
     sc_memoryInit();
     sc_regInit();
 
-    struct itimerval nv, ov;
-
-    signal(SIGALRM, sing);
     signal(SIGUSR1, sing);
-
-    nv.it_interval.tv_sec = 1;
-    nv.it_interval.tv_usec = 500;
-    nv.it_value.tv_sec = 1;
-    nv.it_value.tv_usec = 500;
-
-    setitimer(ITIMER_REAL, &nv, &ov);
 
     while (!q) {
         draw();
@@ -292,7 +286,9 @@ int32_t main()
         int ans = rk_readkey(k);
 
         if (!ans && k == keys::i) {
-            sc_regSet(T, 0);
+            timer = 0;
+            signal(SIGALRM, SIG_IGN);
+            raise(SIGUSR1);
         } else if (!ans && !sgt) {
             press = 1;
             switch (k) {
@@ -442,7 +438,44 @@ int32_t main()
                 break;
             }
             case keys::F6: {
-                raise(SIGUSR1);
+                mt_clrscr();
+                insc++;
+                int a, b;
+
+                cout << "Enter the x and y coordinates of the cursor (x: 1-10 "
+                        "and y: 1-10): ";
+                cin >> a >> b;
+
+                if (a < 1 || a > 10 || b < 1 || b > 10) {
+                    cout << "Error! Incorrect coordinates entered. Press any "
+                            "key to continue.";
+
+                    cin.get();
+                    cin.get();
+
+                    break;
+                }
+
+                kurx = a - 1;
+                kury = b - 1;
+
+                break;
+            }
+            case keys::r: {
+                if (!timer) {
+                    struct itimerval nv, ov;
+
+                    signal(SIGALRM, sing);
+
+                    nv.it_interval.tv_sec = 1;
+                    nv.it_interval.tv_usec = 500;
+                    nv.it_value.tv_sec = 1;
+                    nv.it_value.tv_usec = 500;
+
+                    setitimer(ITIMER_REAL, &nv, &ov);
+
+                    timer = 1;
+                }
 
                 break;
             }
