@@ -253,7 +253,24 @@ void sing(int sn)
         sc_regGet(T, t);
 
         if (!t) {
-            insc++;
+            if (kury < 9) {
+                kury++;
+            }
+            else {
+                kury = 0;
+                if (kurx < 9) {
+                    kurx++;
+                }
+                else {
+                    kurx = 0;
+                }
+            }
+            if (insc < 99) {
+                insc++;
+            }
+            else {
+                insc = 0;
+            }
             if (!press) {
                 draw();
             }
@@ -439,14 +456,14 @@ int32_t main()
             }
             case keys::F6: {
                 mt_clrscr();
-                insc++;
+
                 int a, b;
 
-                cout << "Enter the x and y coordinates of the cursor (x: 1-10 "
-                        "and y: 1-10): ";
+                cout << "Enter the x and y coordinates of the cursor (x: 0-9 "
+                        "and y: 0-9): ";
                 cin >> a >> b;
 
-                if (a < 1 || a > 10 || b < 1 || b > 10) {
+                if (a < 0 || a > 9 || b < 0 || b > 9) {
                     cout << "Error! Incorrect coordinates entered. Press any "
                             "key to continue.";
 
@@ -456,8 +473,9 @@ int32_t main()
                     break;
                 }
 
-                kurx = a - 1;
-                kury = b - 1;
+                kurx = a;
+                kury = b;
+                insc = a * 10 + b;
 
                 break;
             }
@@ -481,6 +499,7 @@ int32_t main()
             }
             }
             press = 0;
+            insc = kurx * 10 + kury;
         }
     }
 
