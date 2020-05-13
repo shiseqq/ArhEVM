@@ -2,6 +2,8 @@
 
 int a[100];
 int32_t reg;
+int insc = 0;
+int accum = 0;
 
 int sc_memoryInit()
 {
@@ -85,7 +87,7 @@ int sc_regGet(int regist, int& value)
 
 int sc_commandEncode(int command, int operand, int& value)
 {
-    if ((command == 0 && operand == 0 ) || (command == 0x10 || command == 0x11 || command == 0x20 || command == 0x21 || command > 0x29 && command < 0x34 || command > 0x39 && command < 0x44 || command > 0x50 && command < 0x77) && (operand == 0x10 || operand == 0x11 || operand == 0x20 || operand == 0x21 || operand > 0x29 && operand < 0x34 || operand > 0x39 && operand < 0x44 || operand > 0x50 && operand < 0x77)) {
+    if ((command == 0 && operand == 0) || (command == 0x10 || command == 0x11 || command == 0x20 || command == 0x21 || command > 0x29 && command < 0x34 || command > 0x39 && command < 0x44 || command > 0x50 && command < 0x77) && (operand >= 0 && operand <= 99)) {
         value = command * 128 + operand; // (command << 7) + operand
         return 0;
     }
@@ -98,7 +100,7 @@ int sc_commandDecode(int value, int& command, int& operand)
 {
     int c = value >> 7; //value / 128; // value >> 7
     int o = (~(c << 7)) & value; //value % 128; // (~(c << 7)) & value
-    if (!(value & (1 << 15)) && (c == 0x10 || c == 0x11 || c == 0x20 || c == 0x21 || c > 0x29 && c < 0x34 || c > 0x39 && c < 0x44 || c > 0x50 && c < 0x77) && (o == 0x10 || o == 0x11 || o == 0x20 || o == 0x21 || o > 0x29 && o < 0x34 || o > 0x39 && o < 0x44 || o > 0x50 && o < 0x77) || value == 0) {
+    if (!(value & (1 << 14)) && (c == 0x10 || c == 0x11 || c == 0x20 || c == 0x21 || c > 0x29 && c < 0x34 || c > 0x39 && c < 0x44 || c > 0x50 && c < 0x77) && (o >= 0 && o <= 99) || value == 0) {
         command = c;
         operand = o;
         return 0;

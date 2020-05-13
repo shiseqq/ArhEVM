@@ -1,23 +1,29 @@
 #include "myBigChars.h"
 #include "myReadkey.h"
 #include "simplepc.h"
+#include "control.h"
 #include <signal.h>
 #include <sys/time.h>
 
 extern int a[100];
 extern int32_t reg;
-int insc = 0;
-int kurx = 0, kury = 0;
+extern int insc;
+extern int accum;
+
+extern int kurx, kury;
 bool press = 0;
+unsigned int** num = new unsigned int*[17];
+extern bool timer;
 
 void draw()
 {
     mt_setbgcolor(black);
     mt_setfgcolor(white);
     mt_clrscr();
+    mt_gotoXY(0, 0);
     int x, y;
     mt_getscreensize(x, y);
-    bc_box(1, 1, 62, 12);
+    bc_box(1, 1, 63, 12);
     mt_gotoXY(x * 0.75 / 2 - 4, 1);
     cout << "Memory" << endl;
     for (int i = 0; i < 10; i++) {
@@ -29,11 +35,13 @@ void draw()
 
             int vl;
             sc_memoryGet(i * 10 + j, vl);
-            sc_commandDecode(vl, c, p);
             if (i == kurx && j == kury) {
                 mt_setbgcolor(colors::red);
                 mt_setfgcolor(colors::blue);
+            }
 
+            if (!(vl & (1 << 14))) {   
+                sc_commandDecode(vl, c, p);
                 cout << "+";
 
                 ss << hex << c;
@@ -56,51 +64,53 @@ void draw()
                 }
 
                 cout << hex << p;
+            }
+            else {
+                vl &= ~(1 << 14);
+                ss << hex << vl;
+                ss >> s;
 
+                cout << " ";
+                for (int i = s.size(); i < 4; i++) {
+                    cout << 0;
+                }
+                cout << s;
+            }
+            if (i == kurx && j == kury) {
                 mt_setbgcolor(black);
                 mt_setfgcolor(white);
-
-                printf(" ");
-            } else {
-                cout << "+";
-
-                ss << hex << c;
-                ss >> s;
-
-                if (s.size() == 1) {
-                    cout << 0;
-                }
-
-                cout << hex << c;
-
-                ss.clear();
-                s.clear();
-
-                ss << hex << p;
-                ss >> s;
-
-                if (s.size() == 1) {
-                    cout << 0;
-                }
-
-                cout << hex << p;
-                cout << " ";
             }
+            cout << " ";
         }
     }
+    stringstream sst;
+    string st;
+
     bc_box((x + x * 0.75) / 2 - 9, 1, 20, 3);
     mt_gotoXY((x + x * 0.75) / 2 - 4, 1);
     cout << "accumulator";
-    mt_gotoXY((x + x * 0.75) / 2 - 2, 2);
-    cout << "+9999";
+    mt_gotoXY((x + x * 0.75) / 2 - 1, 2);
+
+    sst << hex << accum;
+    sst >> st;
+
+    if (st.size() < 4) {
+        reverse(st.begin(), st.end());
+        while (st.size() < 4) {
+            st.push_back('0');
+        }
+        reverse(st.begin(), st.end());
+    }
+    cout << st;
+    st.clear();
+    sst.clear();    
+
 
     bc_box((x + x * 0.75) / 2 - 9, 4, 20, 3);
     mt_gotoXY((x + x * 0.75) / 2 - 8, 4);
     cout << "instructionCounter";
-    mt_gotoXY((x + x * 0.75) / 2 - 2, 5);
+    mt_gotoXY((x + x * 0.75) / 2 - 1, 5);
 
-    stringstream sst;
-    string st;
 
     sst << hex << insc;
     sst >> st;
@@ -112,37 +122,81 @@ void draw()
         }
         reverse(st.begin(), st.end());
     }
-    cout << "+" << st;
+    cout << st;
 
     bc_box((x + x * 0.75) / 2 - 9, 7, 20, 3);
     mt_gotoXY((x + x * 0.75) / 2 - 4, 7);
     cout << "Operarion";
-    mt_gotoXY((x + x * 0.75) / 2 - 4, 8);
 
-    int vl, cm, op;
+    int vl;
     stringstream ss;
-    string c, p;
     sc_memoryGet(10 * kurx + kury, vl);
-    sc_commandDecode(vl, cm, op);
+    bc_box(1, 13, (x * 0.6) - 4, 12);
+    if (!(vl & (1 << 14))) {
+        mt_gotoXY((x + x * 0.75) / 2 - 4, 8);
+        int cm, op;
+        string c, p;
+        sc_commandDecode(vl, cm, op);
 
-    ss << hex << cm;
-    ss >> c;
-    ss.clear();
+        ss << hex << cm;
+        ss >> c;
+        ss.clear();
 
-    ss << hex << op;
-    ss >> p;
+        ss << hex << op;
+        ss >> p;
 
-    if (c.size() == 1) {
-        c += '0';
-        reverse(c.begin(), c.end());
+        if (c.size() == 1) {
+            c += '0';
+            reverse(c.begin(), c.end());
+        }
+
+        if (p.size() == 1) {
+            p += '0';
+            reverse(p.begin(), p.end());
+        }
+
+        cout << '+' << c << " : " << p;
+
+        bc_printbigchar(num[16], 2, 15, colors::white, colors::black);
+
+        for (int i = 0, x = 11; i < 2; i++, x += 9) {
+            bc_printbigchar(num[c[i] - '0'], x, 15, colors::white, colors::black);
+        }
+
+        for (int i = 0, x = 29; i < 2; i++, x += 9) {
+            if (p[i] >= '0' && p[i] <= '9') {
+                bc_printbigchar(num[p[i] - '0'], x, 15, colors::white, colors::black);
+            }
+            else {
+                bc_printbigchar(num[p[i] - 'a' + 10], x, 15, colors::white, colors::black);
+            }
+        }
     }
+    else {
+        mt_gotoXY((x + x * 0.75) / 2 - 4, 8);
+        cout << "+00 : 00";
+        vl &= ~(1 << 14);
+        
+        string s;
+        ss << hex << vl;
+        ss >> s;
 
-    if (p.size() == 1) {
-        p += '0';
-        reverse(p.begin(), p.end());
+        reverse(s.begin(), s.end());
+        for (int i = s.size(); i < 4; i++) {
+            s.push_back('0');
+        }
+        reverse(s.begin(), s.end());
+
+        for (int i = 0, x = 11; i < 4; i++, x += 9) {
+            if (s[i] >= '0' && s[i] < '9') {
+                bc_printbigchar(num[s[i] - '0'], x, 15, colors::white, colors::black);
+            }
+            else {
+                bc_printbigchar(num[s[i] - 'a' + 10], x, 15, colors::white, colors::black);
+            }
+        }
+
     }
-
-    cout << '+' << c << " : " << p;
 
     bc_box((x + x * 0.75) / 2 - 9, 10, 20, 3);
     mt_gotoXY((x + x * 0.75) / 2 - 3, 10);
@@ -219,31 +273,12 @@ void draw()
     cout << "F6 - instructionCounter";
     mt_gotoXY(x - 1, y);
 
-    unsigned int** num = new unsigned int*[11];
-    for (int i = 0; i < 11; i++) {
-        num[i] = new unsigned int[2];
-    }
-
-    int tmp;
-    bc_bigcharread("bigchar.bin", num, 11, tmp);
-
-    bc_box(1, 13, (x * 0.6) - 4, 12);
-    bc_printbigchar(num[10], 2, 15, colors::white, colors::black);
-
-    for (int i = 0, x = 11; i < 2; i++, x += 9) {
-        bc_printbigchar(num[c[i] - '0'], x, 15, colors::white, colors::black);
-    }
-
-    for (int i = 0, x = 29; i < 2; i++, x += 9) {
-        bc_printbigchar(num[p[i] - '0'], x, 15, colors::white, colors::black);
-    }
-
-    mt_gotoXY(x * 0.75 / 2 - 29, 25);
-    cout << "Input/Output:" << endl;
-    mt_gotoXY(x * 0.75 / 2 - 29, 26);
-    cout << "35< +1F1F" << endl;
-    mt_gotoXY(x * 0.75 / 2 - 29, 27);
-    cout << "35< +1F1F" << endl;
+    mt_gotoXY(2, 25);
+    cout << "Input/Output:";
+    mt_gotoXY(2, 26);
+    cout << hex << insc << dec << " < " << endl;
+    mt_gotoXY(2, 27);
+    cout << hex << insc << dec << " > " << endl;
 }
 
 void sing(int sn)
@@ -276,6 +311,8 @@ void sing(int sn)
             }
         }
     } else {
+        signal(SIGALRM, SIG_IGN);
+        timer = 0;
         kurx = kury = 0;
         sc_regInit();
         sc_memoryInit();
@@ -285,7 +322,17 @@ void sing(int sn)
 
 int32_t main()
 {
-    bool q = 0, timer = 0;
+    // terminal size - 88x29
+    printf("\e[8;%d;%d;t", 29, 88);
+
+    for (int i = 0; i < 17; i++) {
+        num[i] = new unsigned int[2];
+    }
+
+    int tmp;
+    bc_bigcharread("bigchar.bin", num, 17, tmp);
+
+    bool q = 0;
 
     sc_memoryInit();
     sc_regInit();
@@ -303,8 +350,6 @@ int32_t main()
         int ans = rk_readkey(k);
 
         if (!ans && k == keys::i) {
-            timer = 0;
-            signal(SIGALRM, SIG_IGN);
             raise(SIGUSR1);
         } else if (!ans && !sgt) {
             press = 1;
@@ -354,13 +399,13 @@ int32_t main()
                 mt_clrscr();
                 int c, p, value;
                 cout << "Enter command and operand: ";
-                cin >> hex >> c >> p;
+                cin >> hex >> c >> dec >> p;
 
                 if (!sc_commandEncode(c, p, value)) {
                     sc_memorySet(kurx * 10 + kury, value);
                 } else {
                     cout << "Error! Invalid command or operand number. Press "
-                            "any key to continue.";
+                            "enter to continue.";
 
                     cin.get();
                     cin.get();
@@ -376,7 +421,7 @@ int32_t main()
                 cin >> s;
 
                 if (s.size() < 5 || s.find('.') == string::npos) {
-                    cout << "Error! Invalid file name. Press any key to "
+                    cout << "Error! Invalid file name. Press enter to "
                             "continue.";
 
                     cin.get();
@@ -387,7 +432,7 @@ int32_t main()
 
                 if (s.substr(s.size() - 4, s.size()) != ".bin") {
                     cout << "Error! Invalid file format. Supported only .bin "
-                            "format. Press any key to continue.";
+                            "format. Press enter to continue.";
 
                     cin.get();
                     cin.get();
@@ -408,7 +453,7 @@ int32_t main()
                 cin >> s;
 
                 if (s.size() < 5 || s.find('.') == string::npos) {
-                    cout << "Error! Invalid file name. Press any key to "
+                    cout << "Error! Invalid file name. Press enter to "
                             "continue.";
 
                     cin.get();
@@ -419,7 +464,7 @@ int32_t main()
 
                 if (s.substr(s.size() - 4, s.size()) != ".bin") {
                     cout << "Error! Invalid file format. Supported only .bin "
-                            "format. Press any key to continue.";
+                            "format. Press enter to continue.";
 
                     cin.get();
                     cin.get();
@@ -429,7 +474,7 @@ int32_t main()
 
                 if (sc_memoryLoad(s) == -1) {
                     cout << "Error! File with name" << s
-                         << "does not exist. Press any key to continue.";
+                         << "does not exist. Press enter to continue.";
 
                     cin.get();
                     cin.get();
@@ -446,7 +491,7 @@ int32_t main()
                 cin >> r >> v;
 
                 if (sc_regSet(r, v) == -1) {
-                    cout << "Error! Invalid values. Press any key to continue.";
+                    cout << "Error! Invalid values. Press enter to continue.";
 
                     cin.get();
                     cin.get();
@@ -457,15 +502,14 @@ int32_t main()
             case keys::F6: {
                 mt_clrscr();
 
-                int a, b;
+                int a;
 
-                cout << "Enter the x and y coordinates of the cursor (x: 0-9 "
-                        "and y: 0-9): ";
-                cin >> a >> b;
+                cout << "Enter the coordinate of the cursor (value: 0-99) ";
+                cin >> a;
 
-                if (a < 0 || a > 9 || b < 0 || b > 9) {
-                    cout << "Error! Incorrect coordinates entered. Press any "
-                            "key to continue.";
+                if (a < 0 || a > 99) {
+                    cout << "Error! Incorrect coordinate entered. Press "
+                            "enter to continue.";
 
                     cin.get();
                     cin.get();
@@ -473,9 +517,9 @@ int32_t main()
                     break;
                 }
 
-                kurx = a;
-                kury = b;
-                insc = a * 10 + b;
+                insc = a;
+                kurx = insc / 10;
+                kury = insc - 10 * kurx;
 
                 break;
             }
@@ -493,6 +537,41 @@ int32_t main()
                     setitimer(ITIMER_REAL, &nv, &ov);
 
                     timer = 1;
+                }
+
+                break;
+            }
+            case keys::t: {
+                CU();
+
+                break;
+            }
+            case keys::F5: {
+                mt_clrscr();
+                int t;
+                cout << "Enter accumulator value (-8192 ";
+                bc_printA('y');
+                cout << " value ";
+                bc_printA('y');
+                cout << " 8191): "; 
+
+                cin >> t;
+
+                if (t < -8192 || t > 8191) {
+                    cout << "Error! A value has been entered that overflows memory. Press enter to continue.";
+                    
+                    cin.get();
+                    cin.get();
+
+                    break;
+                }
+                
+                if (t >= 0) {
+                    accum = t;
+                }
+                else {
+                    bitset<14> e(t);
+                    accum = e.to_ulong();
                 }
 
                 break;
