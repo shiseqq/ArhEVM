@@ -21,25 +21,25 @@ int rk_mytermregime(bool regime, bool vtime, bool vmin, bool echo, bool sigint)
     tcgetattr(0, &tty);
     if (!echo) {
         tty.c_lflag &= ~(ECHO);
-        if (!sigint) {
-            tty.c_lflag &= ~(ISIG);
-        }
-
-        if (!regime) {
-            tty.c_lflag &= ~(ICANON);
-        } else {
-            tty.c_lflag &= ICANON;
-        }
-
-        if (vmin) {
-            tty.c_cc[VMIN] = 1;
-        }
-
-        if (vtime) {
-            tty.c_cc[VTIME] = 1;
-        }
     } else {
         tty.c_lflag &= ECHO;
+    }
+    if (!sigint) {
+        tty.c_lflag &= ~(ISIG);
+    }
+
+    if (!regime) {
+        tty.c_lflag &= ~(ICANON);
+    } else {
+        tty.c_lflag &= ICANON;
+    }
+
+    if (vmin) {
+        tty.c_cc[VMIN] = 1;
+    }
+
+    if (vtime) {
+        tty.c_cc[VTIME] = 1;
     }
 
     tcsetattr(0, TCSAFLUSH, &tty);

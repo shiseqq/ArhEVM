@@ -1,11 +1,17 @@
 #include "control.h"
+#include "draw.h"
 #include "myTerm.h"
+#include "signal.h"
 #include "simplepc.h"
+#include <signal.h>
+#include <sys/time.h>
 
 extern int a[100];
 extern int32_t reg;
-extern int insc;
+extern int insc, kurx, kury;
 extern int accum;
+
+extern void sing(int sn);
 
 int kurx = 0, kury = 0;
 bool timer = 0;
@@ -19,36 +25,43 @@ int CU()
     if (sc_commandDecode(a[insc], command, operand) == -1) {
         sc_regSet(T, 1);
         sc_regSet(E, 1);
-        signal(SIGALRM, SIG_IGN);
         return -1;
+    }
+
+    if (command == 0 && operand == 0) {
+        insc++;
+        kurx = insc / 10;
+        kury = insc - 10 * kurx;
+        return 0;
     }
 
     if (command >= 0x30 && command <= 0x33) {
         prev_oper = a[insc];
-        return ALU(command, operand);
+        int rs = ALU(command, operand);
+        if (rs != -1) {
+            if (insc < 99) {
+                insc++;
+            } else {
+                insc = 0;
+            }
+        }
+        kurx = insc / 10;
+        kury = insc - 10 * kurx;
+        return rs;
     }
 
     switch (command) {
     case 0x10: {
         stringstream ss;
         string num;
+
         mt_gotoXY(2, 26);
         cout << hex << insc << dec << " < ";
         cin >> num;
 
         for (auto& i : num) {
             if (i != '+' && i != '-' && (i < '0' || i > '9')) {
-                mt_gotoXY(2, 26);
-                cout << hex << insc << dec << " < ";
-                mt_setfgcolor(colors::red);
-                cout << "Error! No number entered! Press enter to continue.";
-                mt_setfgcolor(colors::white);
-
-                cin.get();
-                cin.get();
-
-                mt_gotoXY(2, 26);
-                cout << hex << insc << dec << " < ";
+                sc_regSet(E, 1);
 
                 done = 0;
                 return -1;
@@ -73,13 +86,6 @@ int CU()
 
         } else {
             sc_regSet(M, 1);
-            mt_gotoXY(2, 28);
-            mt_setfgcolor(colors::red);
-            cout << "Error! Out of memory! Press enter to continue.";
-            mt_setfgcolor(colors::white);
-
-            cin.get();
-            cin.get();
 
             done = 0;
             return -1;
@@ -87,6 +93,12 @@ int CU()
 
         prev_oper = a[insc];
         done = 1;
+        if (insc < 99) {
+            insc++;
+        } else {
+            insc = 0;
+        }
+
         break;
     }
     case 0x11: {
@@ -116,15 +128,7 @@ int CU()
                 cin.get();
             }
         } else {
-            mt_gotoXY(2, 28);
-            mt_setfgcolor(colors::red);
-            cout << "Error! The command is stored in this memory location. "
-                    "Press enter to "
-                    "continue.";
-            mt_setfgcolor(colors::white);
-
-            cin.get();
-            cin.get();
+            sc_regSet(E, 1);
 
             done = 0;
             return -1;
@@ -132,6 +136,11 @@ int CU()
 
         prev_oper = a[insc];
         done = 1;
+        if (insc < 99) {
+            insc++;
+        } else {
+            insc = 0;
+        }
         break;
     }
     case 0x20: {
@@ -142,15 +151,7 @@ int CU()
             vl &= ~(1 << 14);
             accum = vl;
         } else {
-            mt_gotoXY(2, 28);
-            mt_setfgcolor(colors::red);
-            cout << "Error! The command is stored in this memory location. "
-                    "Press enter to "
-                    "continue.";
-            mt_setfgcolor(colors::white);
-
-            cin.get();
-            cin.get();
+            sc_regSet(E, 1);
 
             done = 0;
             return -1;
@@ -158,6 +159,11 @@ int CU()
 
         prev_oper = a[insc];
         done = 1;
+        if (insc < 99) {
+            insc++;
+        } else {
+            insc = 0;
+        }
         break;
     }
     case 0x21: {
@@ -166,6 +172,11 @@ int CU()
 
         prev_oper = a[insc];
         done = 1;
+        if (insc < 99) {
+            insc++;
+        } else {
+            insc = 0;
+        }
         break;
     }
     case 0x40: {
@@ -187,6 +198,11 @@ int CU()
             kury = insc - 10 * kurx;
 
         } else {
+            if (insc < 99) {
+                insc++;
+            } else {
+                insc = 0;
+            }
             mv = 0;
             pos = insc;
         }
@@ -202,6 +218,11 @@ int CU()
             kurx = insc / 10;
             kury = insc - 10 * kurx;
         } else {
+            if (insc < 99) {
+                insc++;
+            } else {
+                insc = 0;
+            }
             mv = 0;
             pos = insc;
         }
@@ -212,13 +233,15 @@ int CU()
     case 0x43: {
         if (timer) {
             signal(SIGALRM, SIG_IGN);
-            if (insc > 0) {
-                insc--;
-            } else {
-                insc = 99;
-            }
-            kurx = insc / 10;
-            kury = insc - 10 * kurx;
+
+            struct itimerval ov;
+            ov.it_interval.tv_sec = 0;
+            ov.it_interval.tv_usec = 0;
+            ov.it_value.tv_sec = 0;
+            ov.it_value.tv_usec = 0;
+
+            setitimer(ITIMER_REAL, &ov, NULL);
+
             timer = 0;
         }
 
@@ -244,10 +267,20 @@ int CU()
                 kury = insc - 10 * kurx;
                 mv = 1;
             } else {
+                if (insc < 99) {
+                    insc++;
+                } else {
+                    insc = 0;
+                }
                 pos = insc;
                 mv = 0;
             }
         } else {
+            if (insc < 99) {
+                insc++;
+            } else {
+                insc = 0;
+            }
             pos = insc;
             mv = 0;
         }
@@ -258,6 +291,8 @@ int CU()
     }
     }
 
+    kurx = insc / 10;
+    kury = insc - 10 * kurx;
     return 0;
 }
 
@@ -269,15 +304,7 @@ int ALU(int command, int operand)
     sc_memoryGet(operand, y);
 
     if (!(y & (1 << 14))) {
-        mt_gotoXY(2, 28);
-        mt_setfgcolor(colors::red);
-        cout << "Error! The command is stored in this memory location. "
-                "Press enter to "
-                "continue.";
-        mt_setfgcolor(colors::white);
-
-        cin.get();
-        cin.get();
+        sc_regSet(E, 1);
 
         done = 0;
         return -1;
@@ -314,14 +341,6 @@ int ALU(int command, int operand)
         if (y == 0) {
             sc_regSet(D, 1);
 
-            mt_gotoXY(2, 28);
-            mt_setfgcolor(colors::red);
-            cout << "Error! Division by zero. Press enter to continue.";
-            mt_setfgcolor(colors::white);
-
-            cin.get();
-            cin.get();
-
             done = 0;
             return -1;
         }
@@ -337,19 +356,12 @@ int ALU(int command, int operand)
     }
     }
 
-    if (res < -8192 || res > 8191) {
+    if (res < -8192) {
         sc_regSet(P, 1);
-        mt_gotoXY(2, 28);
-        mt_setfgcolor(colors::red);
-        cout << "Error! Memory overflow during operation. Press enter to "
-                "continue.";
-        mt_setfgcolor(colors::white);
-
-        cin.get();
-        cin.get();
-
-        done = 0;
-        return -1;
+        res = -8192;
+    } else if (res > 8191) {
+        sc_regSet(P, 1);
+        res = 8191;
     }
 
     if (res >= 0) {

@@ -1,1 +1,1 @@
-g++ main.cpp -L. -l spc -l myBigChars -l myTerm -o a
+g++ main.cpp -L. -l control -l draw -l myBigChars -l myReadkey -l mySignal -l myTerm -l spc -o final

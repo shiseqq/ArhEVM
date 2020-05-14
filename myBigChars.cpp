@@ -97,6 +97,8 @@ int bc_setbigcharpos(unsigned int* big, int x, int y, int value)
     } else {
         big[i] &= ~(1 << ((x % 4) * 8 + y));
     }
+
+    return 0;
 }
 
 int bc_getbigcharpos(unsigned int* big, int x, int y, int& value)
