@@ -172,7 +172,7 @@ int32_t main()
                 cout << "Enter file name: ";
                 cin >> s;
 
-                if (s.size() < 5 || s.find('.') == string::npos) {
+                if (s.find('.') == string::npos) {
                     mt_setfgcolor(colors::red);
                     cout << "Error! Invalid file name. Press enter to "
                             "continue.";
@@ -184,22 +184,25 @@ int32_t main()
                     break;
                 }
 
-                if (s.substr(s.size() - 4, s.size()) != ".bin") {
+                if ((s.size() >= 5 && s.substr(s.size() - 4, 4) == ".bin")
+                    || (s.size() >= 3 && s.substr(s.size() - 2, 2) == ".o")) {
+                    if (sc_memoryLoad(s) == -1) {
+                        mt_setfgcolor(colors::red);
+                        cout << "Error! File with name " << s
+                             << " contains an unsupported command or does not "
+                                "exist. Press enter to continue.";
+                        mt_setfgcolor(colors::white);
+
+                        cin.get();
+                        cin.get();
+
+                        break;
+                    }
+                } else {
                     mt_setfgcolor(colors::red);
                     cout << "Error! Invalid file format. Supported only .bin "
+                            "and .o "
                             "format. Press enter to continue.";
-                    mt_setfgcolor(colors::white);
-
-                    cin.get();
-                    cin.get();
-
-                    break;
-                }
-
-                if (sc_memoryLoad(s) == -1) {
-                    mt_setfgcolor(colors::red);
-                    cout << "Error! File with name " << s
-                         << " does not exist. Press enter to continue.";
                     mt_setfgcolor(colors::white);
 
                     cin.get();

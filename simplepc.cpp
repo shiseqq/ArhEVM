@@ -47,11 +47,64 @@ int sc_memoryLoad(string filename)
 {
     ifstream inp(filename, ios::binary);
     if (!inp.is_open()) {
+        inp.close();
         return -1;
+    }
+
+    if (filename.substr(filename.size() - 2, 2) == ".o") {
+        vector<pair<int, int>> vt;
+        while (1) {
+            stringstream ss;
+            int adr, b, com, opr, vl;
+
+            inp.read((char*)&adr, sizeof(adr));
+            inp.read((char*)&b, sizeof(b));
+
+            if (inp.eof()) {
+                break;
+            }
+
+            if (b == 0) {
+                char c[5];
+                inp.read((char*)&c, sizeof(c));
+
+                string str = c, as, bs;
+                as = str.substr(1, 2);
+                bs = str.substr(3, 2);
+
+                ss << as;
+                ss >> hex >> com >> dec;
+                ss.clear();
+                ss << bs;
+                ss >> hex >> opr >> dec;
+                if (sc_commandEncode(com, opr, vl) == -1) {
+                    inp.close();
+                    return -1;
+                }
+            } else {
+                int p;
+                inp.read((char*)&p, sizeof(p));
+
+                if (sc_commandEncode(b, p, vl) == -1) {
+                    inp.close();
+                    return -1;
+                }
+            }
+
+            vt.push_back({adr, vl});
+        }
+
+        inp.close();
+
+        for (auto& i : vt) {
+            a[i.first] = i.second;
+        }
     } else {
         inp.read((char*)a, sizeof(a));
-        return 0;
     }
+
+    inp.close();
+    return 0;
 }
 
 int sc_regInit()
