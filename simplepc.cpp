@@ -68,18 +68,28 @@ int sc_memoryLoad(string filename)
                 char c[5];
                 inp.read((char*)&c, sizeof(c));
 
-                string str = c, as, bs;
-                as = str.substr(1, 2);
-                bs = str.substr(3, 2);
+                string str = c;
 
-                ss << as;
-                ss >> hex >> com >> dec;
-                ss.clear();
-                ss << bs;
-                ss >> hex >> opr >> dec;
-                if (sc_commandEncode(com, opr, vl) == -1) {
-                    inp.close();
-                    return -1;
+                if (str[0] == '+') {
+                    string as, bs;
+                    as = str.substr(1, 2);
+                    bs = str.substr(3, 2);
+
+                    ss << as;
+                    ss >> hex >> com >> dec;
+                    ss.clear();
+                    ss << bs;
+                    ss >> hex >> opr >> dec;
+                    if (sc_commandEncode(com, opr, vl) == -1) {
+                        inp.close();
+                        return -1;
+                    }
+                } else {
+                    int r;
+                    ss << str;
+                    ss >> hex >> r >> dec;
+                    r |= 1 << 14;
+                    vl = r;
                 }
             } else {
                 int p;
