@@ -110,21 +110,23 @@ int32_t main()
                 break;
             }
             case keys::c: {
-                mt_clrscr();
-                int c, p, value, x = kurx, y = kury;
-                cout << "Enter command and operand: ";
-                cin >> hex >> c >> dec >> p;
+                if (!timer) {
+                    mt_clrscr();
+                    int c, p, value, x = kurx, y = kury;
+                    cout << "Enter command and operand: ";
+                    cin >> hex >> c >> dec >> p;
 
-                if (!sc_commandEncode(c, p, value)) {
-                    sc_memorySet(x * 10 + y, value);
-                } else {
-                    mt_setfgcolor(colors::red);
-                    cout << "Error! Invalid command or operand number. Press "
-                            "enter to continue.";
-                    mt_setfgcolor(colors::white);
+                    if (!sc_commandEncode(c, p, value)) {
+                        sc_memorySet(x * 10 + y, value);
+                    } else {
+                        mt_setfgcolor(colors::red);
+                        cout << "Error! Invalid command or operand number. Press "
+                                "enter to continue.";
+                        mt_setfgcolor(colors::white);
 
-                    cin.get();
-                    cin.get();
+                        cin.get();
+                        cin.get();
+                    }
                 }
 
                 break;
@@ -224,20 +226,22 @@ int32_t main()
                 break;
             }
             case keys::v: {
-                mt_clrscr();
-                int r, v;
+                if (!timer) {
+                    mt_clrscr();
+                    int r, v;
 
-                cout << "Enter register (1 - 5) number and value (0 or 1): ";
+                    cout << "Enter register (1 - 5) number and value (0 or 1): ";
 
-                cin >> r >> v;
+                    cin >> r >> v;
 
-                if (sc_regSet(r, v) == -1) {
-                    mt_setfgcolor(colors::red);
-                    cout << "Error! Invalid values. Press enter to continue.";
-                    mt_setfgcolor(colors::white);
+                    if (sc_regSet(r, v) == -1) {
+                        mt_setfgcolor(colors::red);
+                        cout << "Error! Invalid values. Press enter to continue.";
+                        mt_setfgcolor(colors::white);
 
-                    cin.get();
-                    cin.get();
+                        cin.get();
+                        cin.get();
+                    }
                 }
 
                 break;

@@ -46,6 +46,7 @@ void sing(int sn)
             draw();
         }
     } else {
+        rk_mytermrestore();
         signal(SIGALRM, SIG_IGN);
         struct itimerval ov;
         ov.it_interval.tv_sec = 0;
